@@ -1,0 +1,104 @@
+// Prisma Schema for VÉLORA Luxury Boutique E-Commerce & VELA AI
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("CUSTOMER")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  orders    Order[]
+  wishlists Wishlist[]
+}
+
+model Product {
+  id            String      @id @default(uuid())
+  name          String
+  slug          String      @unique
+  price         Float
+  originalPrice Float?
+  category      String
+  subcategory   String
+  description   String
+  details       String      // stored as JSON string
+  materials     String
+  sizes         String      // stored as JSON string
+  colors        String      // stored as JSON string
+  images        String      // stored as JSON string
+  rating        Float       @default(5.0)
+  reviewCount   Int         @default(0)
+  inStock       Boolean     @default(true)
+  isNew         Boolean     @default(false)
+  isFeatured    Boolean     @default(false)
+  isTrending    Boolean     @default(false)
+  tags          String      // stored as JSON string
+  occasion      String      // stored as JSON string
+  style         String      // stored as JSON string
+  gender        String      @default("Women")
+  fit           String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  orderItems    OrderItem[]
+  wishlistItems WishlistItem[]
+}
+
+model Order {
+  id               String      @id @default(uuid())
+  orderRef         String      @unique
+  userId           String?
+  user             User?       @relation(fields: [userId], references: [id])
+  subtotal         Float
+  shippingFee      Float
+  discount         Float       @default(0)
+  total            Float
+  status           String      @default("Processing")
+  paymentMethod    String
+  shippingFullName String
+  shippingEmail    String
+  shippingPhone    String
+  shippingAddress  String
+  shippingCity     String
+  shippingState    String
+  shippingPincode  String
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+  items            OrderItem[]
+}
+
+model OrderItem {
+  id            String   @id @default(uuid())
+  orderId       String
+  order         Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  selectedSize  String
+  selectedColor String
+  quantity      Int
+  unitPrice     Float
+}
+
+model Wishlist {
+  id        String         @id @default(uuid())
+  userId    String
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  items     WishlistItem[]
+}
+
+model WishlistItem {
+  id         String   @id @default(uuid())
+  wishlistId String
+  wishlist   Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  addedAt    DateTime @default(now())
+}
