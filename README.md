@@ -1,120 +1,144 @@
 # VÉLORA — Luxury Boutique E-Commerce & VELA AI Personal Stylist
 
-> **VÉLORA** (*"Curated for your style."*) is a full-stack luxury boutique fashion e-commerce platform integrated with **VELA**, an intelligent AI personal stylist. Built using Next.js 15, React 19, TypeScript, Tailwind CSS, Prisma ORM, Zod validation, and Google Gemini API.
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-15.1+-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" />
+  <img src="https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
+  <img src="https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel Deployed" />
+</p>
+
+> **VÉLORA** (*"Curated for your style."*) is a full-stack, production-grade luxury fashion e-commerce platform integrated with **VELA**, an intelligent AI Personal Stylist powered by Google Gemini API & dynamic intent tool execution.
 
 ---
 
-## 🌟 Key Features & Technical Highlights
+## 🔗 Live Links & Repository
 
-### 1. 🤖 VELA — Intelligent AI Personal Stylist
-- **Natural Language Intent Extraction**: Parses client queries for category, price budget in ₹ INR (e.g. *"under ₹7,000"*), occasion (*wedding, date night, resort*), style preference (*minimal, glam, boho*), and color.
-- **Controlled Function / Tool Calling**: Executes real-time catalog tools (`searchProducts`, `filterByBudget`, `getProductsByOccasion`, `buildOutfit`) against database items without hallucinating non-existent products.
-- **AI Outfit Builder**: Assembles multi-piece outfits (Top + Bottom + Accessories/Shoes) matching occasion and budget with a single-click **"Add Entire Outfit to Bag"** button!
-- **In-Chat Product Cards**: Displays product thumbnails, titles, prices in ₹ INR, and direct **"View Item"** and **"Add to Atelier Bag"** buttons inside the chat stream.
-- **Zod Validation & Fallback**: All incoming client requests and AI tool parameters are validated using Zod schemas (`AIChatRequestSchema`). Operates dynamically via Gemini 1.5 Flash API or an offline intent engine fallback.
-
-### 2. 👗 Full-Stack Luxury E-Commerce Architecture
-- **Clean Service Layer Pattern**: Decouples UI components from backend logic:
-  - `ProductService`: Catalog searching, multi-faceted filtering, and outfit composition.
-  - `AIShoppingService`: VELA AI tool execution, Zod validation, and LLM processing.
-  - `OrderService`: Server-side price verification, inventory checks, and order creation.
-- **Relational Database Design (`prisma/schema.prisma`)**:
-  - `User`, `Product`, `Category`, `Order`, `OrderItem`, `Wishlist`, `WishlistItem`.
-- **Server-Side Order Price Verification**: Prevents client-side price tampering by recalculating line item subtotal server-side in `/api/orders`.
-- **Multi-Faceted Search & Filters (`/shop`)**: Category tabs, price slider (₹3,000–₹20,000), sizes (`XS` to `XL`, `38` to `43`), occasion filters, sorting options, and grid column toggles.
-- **Product Details (`/product/[slug]`)**: Thumbnail gallery switcher, zoom preview, color/size selection, material care, and **"Complete the Ensemble"** recommendations.
-- **Slide-Over Bag & Page (`/cart`)**: Persistent cart drawer, free shipping progress bar, promo code validation (`VELORA10` for 10% off), and subtotal calculation.
-- **Concierge Checkout & Tracking (`/checkout`, `/order-confirmation/[id]`)**: Zod-validated shipping form, mock Card/UPI/COD payment choices, and 4-stage live courier tracking simulator.
+- 🌐 **Live Production Deployment**: [https://elan-atelier-eight.vercel.app](https://elan-atelier-eight.vercel.app)
+- 🐙 **GitHub Repository**: [https://github.com/Romsha23/velora-atelier](https://github.com/Romsha23/velora-atelier)
+- 👤 **Author & Lead Architect**: [Romsha Wadhwa (@Romsha23)](https://github.com/Romsha23)
 
 ---
 
-## 🛠️ Tech Stack & Dependencies
+## 🌟 Key Features & Experience Design
 
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Database & ORM**: Prisma ORM with SQLite/PostgreSQL schema
-- **Validation**: Zod
-- **Styling & Design**: Tailwind CSS, Playfair Display (Serif) & Plus Jakarta Sans (Body), VÉLORA Luxury Gold & Onyx Palette
-- **Icons & Motion**: `lucide-react`, `framer-motion`
-- **AI SDK**: `@google/generative-ai` (Google Gemini 1.5 Flash)
+### 🤖 1. VELA — Intelligent AI Personal Stylist
+- **Natural Language Intent Parsing**: Extracts target categories, occasions (*gala, wedding, date night, resort*), style aesthetics (*minimalist, editorial, avant-garde*), color choices, and precise price budgets in **₹ INR** (e.g., *"Build an outfit under ₹5,000"*).
+- **Controlled Function / Tool Calling**: Executes real-time database query tools (`searchProducts`, `filterByBudget`, `getProductsByOccasion`, `buildOutfit`) to guarantee zero hallucinated items.
+- **Interactive AI Outfit Builder Cards**: Generates complete multi-piece ensembles (Top + Bottom + Accessory + Footwear) rendered in-chat with single-click **"Add Complete Outfit to Bag"** and **"Save Look to Wishlist"** CTAs.
+- **Zod Schema Engine**: Strictly validates incoming chat requests (`AIChatRequestSchema`) and dynamic tool payloads. Includes an offline intent parser fallback when API keys are not supplied.
+
+### 🎨 2. Creative Boutique Features
+- **Atmosphere Mood Dial**: Real-time visual ambiance filter modifying page typography, color accents, and featured edits (*Minimalist, Editorial Chic, Avant-Garde, Evening Luxury, Riviera Resort*).
+- **Digital Runway Studio (`/runway`)**: Interactive styling canvas where clients drag, drop, compose, and preview outfit combinations before purchasing.
+- **Editorial Journal Magazine (`/journal`)**: Fashion lookbook showcasing seasonal trends, styling tips, and instant **"Shop the Look"** functionality.
+
+### 🛒 3. Full-Stack E-Commerce Architecture
+- **Multi-Faceted Search & Filter (`/shop`)**: Dynamic filtering across 32 luxury fashion items by category, price slider (₹3,000 to ₹25,000), sizes (`XS` to `XL`, `38` to `43`), occasion tags, colors, and live sorting.
+- **Product Specs & Recommendations (`/product/[slug]`)**: Multi-angle image gallery switcher, fabric care specs, size guides, and **"Complete the Ensemble"** cross-sells.
+- **Persistent Shopping Bag & Wishlist**: Slide-over drawer and full bag page with live shipping threshold progress bars and promo code validation (`VELORA10` for 10% off).
+- **Concierge Checkout & Courier Simulator (`/checkout`, `/order-confirmation/[id]`)**: Server-validated order creation (`POST /api/orders`) with a 4-stage real-time courier tracking simulator.
 
 ---
 
-## 📁 System Architecture & Directory Structure
+## 🛠️ Tech Stack & Architecture
+
+| Layer | Technology |
+| :--- | :--- |
+| **Frontend Framework** | Next.js 15.1+ (App Router), React 19 |
+| **Language** | TypeScript (Strict Mode) |
+| **Styling** | Tailwind CSS, Playfair Display (Serif), Plus Jakarta Sans (Sans) |
+| **Icons & Motion** | `lucide-react`, `framer-motion` |
+| **State Management** | React Context (`CartContext`, `WishlistContext`, `AIStylistContext`) |
+| **Backend & APIs** | Next.js API Routes (`/api/ai/chat`, `/api/products`, `/api/orders`) |
+| **Validation** | Zod (`/lib/validations/index.ts`) |
+| **Database ORM** | Prisma ORM (`prisma/schema.prisma`) |
+| **AI SDK** | `@google/generative-ai` (Google Gemini 1.5 Flash) |
+| **Deployment** | Vercel Serverless Edge Platform |
+
+---
+
+## 📁 System Directory Structure
 
 ```
-velora/
-├── prisma/
-│   └── schema.prisma             # Relational Database Schema (Product, User, Order, OrderItem, Wishlist)
+velora-atelier/
 ├── app/
-│   ├── layout.tsx                # Root layout with VÉLORA fonts, Providers & VELA AI Trigger
-│   ├── page.tsx                  # Home Page (VÉLORA Hero, Curated Departments, VELA Banner, Journal)
-│   ├── shop/page.tsx             # Shop / Collection (Category tabs, Price slider, Size/Color filters, Sorting)
-│   ├── product/[slug]/page.tsx   # Product Details (Gallery, Specs, Material Care, Outfit Recommender)
-│   ├── cart/page.tsx             # Shopping Bag (Server-calculated subtotal, Promo discount)
-│   ├── checkout/page.tsx         # Concierge Checkout (Customer info, Shipping, Payment, API POST /api/orders)
-│   ├── order-confirmation/[id]/  # Order confirmation receipt & live courier progress simulator
-│   ├── wishlist/page.tsx         # Saved Wishlist items with Move to Bag
-│   ├── journal/page.tsx          # Editorial Lookbook Magazine with direct Shop-the-Look action
-│   ├── account/page.tsx          # User Account Profile & Past Orders History
+│   ├── layout.tsx                # Root layout with VÉLORA styling & providers
+│   ├── page.tsx                  # Landing page (Hero, Mood Dial, Curated Edit, Journal)
+│   ├── shop/page.tsx             # Multi-faceted search & collection page
+│   ├── product/[slug]/page.tsx   # Product detail page & ensemble builder
+│   ├── runway/page.tsx           # Digital Runway Studio Canvas
+│   ├── journal/page.tsx          # Editorial Lookbook Journal
+│   ├── cart/page.tsx             # Shopping bag page
+│   ├── checkout/page.tsx         # Concierge checkout form
+│   ├── order-confirmation/[id]/  # Order confirmation & live courier tracker
+│   ├── order-confirmation/       # Active order lookup fallback
+│   ├── wishlist/page.tsx         # Saved wishlist page
+│   ├── account/page.tsx          # Client account profile
+│   ├── not-found.tsx             # Custom luxury 404 page
 │   └── api/
-│       ├── ai/chat/route.ts      # VELA AI Endpoint (Zod validation & AIShoppingService)
-│       ├── products/route.ts     # Products filter & search API route (ProductService)
-│       └── orders/route.ts       # Order placement endpoint (OrderService)
+│       ├── ai/chat/route.ts      # VELA AI endpoint with tool calling
+│       ├── products/route.ts     # Product search & filtering API
+│       └── orders/route.ts       # Server-side price-verified order API
 ├── components/
-│   ├── navbar.tsx                # Luxury header with VÉLORA logo, search, cart count, Ask VELA button
-│   ├── footer.tsx                # Editorial footer with brand manifesto, newsletter, flagship ateliers
-│   ├── product-card.tsx          # High-end product card with hover gallery & quick bag
-│   ├── cart-drawer.tsx           # Slide-over cart drawer with free shipping progress bar
-│   ├── search-modal.tsx          # Global search overlay modal
+│   ├── navbar.tsx                # Top navigation header
+│   ├── footer.tsx                # Footer with author links & concierge info
+│   ├── product-card.tsx          # Interactive product card
+│   ├── mood-dial.tsx             # Real-time ambiance mood selector
+│   ├── cart-drawer.tsx           # Slide-over cart drawer
+│   ├── search-modal.tsx          # Search modal overlay
 │   └── ai-stylist/
-│       ├── ai-stylist-widget.tsx # VELA AI floating drawer modal window
-│       ├── chat-message.tsx      # Message renderer with embedded product cards & outfit builder card
-│       └── starter-prompts.tsx   # Quick prompt inspiration chips
+│       ├── ai-stylist-widget.tsx # VELA AI chat drawer
+│       ├── chat-message.tsx      # Outfit card renderer
+│       └── starter-prompts.tsx   # Quick inspiration chips
 ├── lib/
 │   ├── services/
-│   │   ├── productService.ts     # Product catalog query & outfit builder service layer
-│   │   ├── aiShoppingService.ts  # VELA AI tool execution & LLM service layer
-│   │   └── orderService.ts       # Order validation & server pricing service layer
+│   │   ├── productService.ts     # Product query & outfit composition layer
+│   │   ├── aiShoppingService.ts  # VELA AI tool execution layer
+│   │   └── orderService.ts       # Server price verification & order creation
 │   ├── validations/
 │   │   └── index.ts              # Zod validation schemas
-│   ├── products-data.ts          # 30+ Detailed boutique fashion products database
+│   ├── products-data.ts          # 32 Luxury boutique fashion items database
 │   ├── cart-context.tsx          # Cart state provider
 │   ├── wishlist-context.tsx      # Wishlist state provider
 │   └── ai-stylist-context.tsx    # VELA AI state provider
-├── types/
-│   └── index.ts                  # TypeScript domain interfaces
-└── README.md                     # Technical architecture documentation
+├── prisma/
+│   └── schema.prisma             # Relational Database Models
+└── README.md                     # Project documentation
 ```
 
 ---
 
-## 🚀 Environment Setup & Local Execution
+## ⚡ Quick Start & Local Setup
 
-### 1. Install Dependencies
+### 1. Clone Repository
 ```bash
-cd elan-atelier
+git clone https://github.com/Romsha23/velora-atelier.git
+cd velora-atelier
+```
+
+### 2. Install Dependencies
+```bash
 npm install
 ```
 
-### 2. Configure Environment Variables
-Create a `.env` file in the root directory:
+### 3. Environment Variables
+Create a `.env` file in the project root:
 ```env
-# Optional: Google Gemini API Key for VELA AI
-# Get a free key at https://aistudio.google.com/
+# Optional: Google Gemini API Key
 GEMINI_API_KEY=your_gemini_api_key_here
 
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
-*Note: If no API key is provided, VELA automatically operates using its internal intent engine to parse queries, match budget/occasion tags, execute catalog search tools, and assemble outfits.*
+*Note: If `GEMINI_API_KEY` is not provided, VELA automatically activates its built-in natural language intent parser fallback to answer queries, parse budget numbers, and build outfits.*
 
-### 3. Run Development Server
+### 4. Run Development Server
 ```bash
 npm run dev
 ```
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Navigate to **[http://localhost:3000](http://localhost:3000)**.
 
-### 4. Production Build Verification
+### 5. Build for Production
 ```bash
 npm run build
 npm run start
@@ -122,11 +146,19 @@ npm run start
 
 ---
 
-## 🧪 Testing & Verification Performed
+## 🔒 Security & Server-Side Validation
 
-- ✅ **VELA AI Stylist Queries**: Tested queries (*"Build an outfit under ₹6,000"*, *"wedding guest dress under ₹7,000"*, *"minimal for date night"*).
-- ✅ **AI Outfit Builder**: Verified VELA combines matching garment + accessory + footwear with a single-click **"Add Entire Outfit"** button.
-- ✅ **Zod Input Validation**: Verified validation on AI chat requests, order checkout forms, and catalog query parameters.
-- ✅ **Server-Side Pricing**: Verified `/api/orders` recalculates item subtotals on the server, ignoring client price overrides.
-- ✅ **Shop Page Discovery**: Tested category filtering, price range slider, sizes, colors, occasions, styles, and sorting.
-- ✅ **Full Order Flow**: Tested bag addition, promo code `VELORA10`, concierge checkout, order confirmation receipt, and live courier tracking.
+- **Server Price Recalculation**: Subtotals are re-calculated on the server inside `/api/orders` by retrieving canonical prices from `PRODUCTS`, preventing client-side DOM tampering.
+- **Zod Data Sanitization**: All API inputs, budget limits, and checkout payloads are strictly parsed and validated with Zod before processing.
+- **CVE Compliance**: Package dependencies are configured to satisfy current security standards for production edge deployment.
+
+---
+
+## 👤 Author & Contact
+
+**Romsha Wadhwa**  
+*Full-Stack Engineer & Architect*
+
+- 🐙 **GitHub**: [@Romsha23](https://github.com/Romsha23)
+- ✉️ **Email**: [`contact@velora-atelier.com`](mailto:contact@velora-atelier.com)
+- 🌐 **Live App**: [https://elan-atelier-eight.vercel.app](https://elan-atelier-eight.vercel.app)
