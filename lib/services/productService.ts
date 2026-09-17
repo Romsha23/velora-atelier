@@ -57,7 +57,6 @@ export class ProductService {
 
     if (params.searchQuery && params.searchQuery.trim() !== '') {
       const q = params.searchQuery.toLowerCase();
-      // Remove generic stop words to get clean search terms
       const stopWords = ['under', 'below', 'less', 'than', 'budget', 'for', 'show', 'me', 'find', 'need', 'want', 'something', 'with', 'and', 'look', 'outfit', 'a', 'an', 'the', 'velora', 'vela'];
       const searchTerms = q
         .split(/\s+/)
@@ -113,7 +112,7 @@ export class ProductService {
   }
 
   /**
-   * AI Outfit Builder: Assembles a harmonized, multi-piece outfit matching gender, occasion, and max budget limit
+   * AI Outfit Builder: Assembles a harmonized multi-piece outfit matching gender, occasion, and max budget limit
    */
   static async buildOutfit(
     gender?: string,
@@ -133,35 +132,67 @@ export class ProductService {
       if (matched.length >= 2) pool = matched;
     }
 
-    const maxLimit = maxBudget && maxBudget > 0 ? maxBudget : 15000;
+    const isHighBudget = !maxBudget || maxBudget >= 30000;
+    const maxLimit = maxBudget && maxBudget > 0 ? maxBudget : 1000000;
 
-    // Filter items that individually do not exceed budget
-    let availableItems = pool.filter((p) => p.price <= maxLimit);
+    // Sort items to match budget intent:
+    // High budget -> Sort descending by price to pick premier luxury pieces
+    // Strict budget -> Sort descending within affordable limit
+    pool.sort((a, b) => (isHighBudget ? b.price - a.price : a.price - b.price));
 
-    // Pick 1 Main Apparel Garment (Shirt/Blazer/Dress/Trousers)
-    let garments = availableItems.filter(
+    const outfitItems: Product[] = [];
+    let currentCost = 0;
+
+    // 1. Pick Primary Garment (Outerwear, Dress, Suit, Blazer)
+    const garments = pool.filter(
       (p) => p.category === 'Women' || p.category === 'Men'
     );
-    let garment = garments.find((p) => p.price <= maxLimit * 0.7) || garments[0] || pool[0];
+    const garment1 = garments.find((p) => p.price <= maxLimit - currentCost) || garments[0];
 
-    let currentCost = garment ? garment.price : 0;
-    let remainingBudget = maxLimit - currentCost;
+    if (garment1) {
+      outfitItems.push(garment1);
+      currentCost += garment1.price;
+    }
 
-    // Pick 1 Accessory / Jewelry / Bag
-    let accessories = PRODUCTS.filter(
-      (p) => p.category === 'Accessories' && p.price <= remainingBudget
+    // 2. Pick Secondary Garment (Trousers, Skirt, Sweater) if budget allows & category differs
+    const secondaryGarments = pool.filter(
+      (p) =>
+        (p.category === 'Women' || p.category === 'Men') &&
+        p.id !== garment1?.id &&
+        p.subcategory !== garment1?.subcategory &&
+        p.price <= maxLimit - currentCost
     );
-    let accessory = accessories[0];
-    if (accessory) currentCost += accessory.price;
 
-    // Pick 1 Footwear item if remaining budget allows
-    remainingBudget = maxLimit - currentCost;
-    let footwears = PRODUCTS.filter(
-      (p) => p.category === 'Footwear' && p.price <= remainingBudget
+    const garment2 = secondaryGarments.find((p) => p.price <= maxLimit - currentCost);
+    if (garment2 && outfitItems.length < 3) {
+      outfitItems.push(garment2);
+      currentCost += garment2.price;
+    }
+
+    // 3. Pick Luxury Accessory (Leather Tote, Sunglasses, Jewelry, Silk Scarf)
+    const accessories = pool.filter(
+      (p) => p.category === 'Accessories' && p.price <= maxLimit - currentCost
     );
-    let footwear = footwears[0];
+    const sortedAccessories = [...accessories].sort((a, b) => (isHighBudget ? b.price - a.price : a.price - b.price));
+    const accessory = sortedAccessories[0];
 
-    const outfitItems = [garment, accessory, footwear].filter(Boolean) as Product[];
+    if (accessory && !outfitItems.some((i) => i.id === accessory.id)) {
+      outfitItems.push(accessory);
+      currentCost += accessory.price;
+    }
+
+    // 4. Pick Artisan Footwear (Heels, Loafers, Boots)
+    const footwears = pool.filter(
+      (p) => p.category === 'Footwear' && p.price <= maxLimit - currentCost
+    );
+    const sortedFootwear = [...footwears].sort((a, b) => (isHighBudget ? b.price - a.price : a.price - b.price));
+    const footwear = sortedFootwear[0];
+
+    if (footwear && !outfitItems.some((i) => i.id === footwear.id)) {
+      outfitItems.push(footwear);
+      currentCost += footwear.price;
+    }
+
     const totalOutfitCost = outfitItems.reduce((sum, item) => sum + item.price, 0);
 
     return {

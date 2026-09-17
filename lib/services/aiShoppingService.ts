@@ -15,6 +15,56 @@ export interface AIShoppingResponse {
   toolActionExecuted?: string;
 }
 
+/**
+ * Advanced Price & Indian Currency Unit Extractor
+ * Parses lakhs, lacs, lakh, lac, crores, cr, k, commas, and rupees
+ */
+function extractPriceBudget(query: string): number | undefined {
+  const q = query.toLowerCase();
+
+  // 1. Lakhs / Lacs / Lakh / Lac (e.g. "ruppess 10lacs", "10 lacs", "10 lakhs", "1 lakh", "2.5 lacs")
+  const lakhMatch =
+    q.match(/(\d+(?:\.\d+)?)\s*(?:lacs|lakhs|lakh|lac|l)\b/i) ||
+    q.match(/ruppess?\s*(\d+(?:\.\d+)?)\s*(?:lacs|lakhs|lakh|lac)\b/i) ||
+    q.match(/(?:worth|budget of?|price|under|below|for)?\s*₹?\s*(\d+(?:\.\d+)?)\s*(?:lacs|lakhs|lakh|lac)\b/i);
+
+  if (lakhMatch && lakhMatch[1]) {
+    const num = parseFloat(lakhMatch[1]);
+    if (!isNaN(num)) return Math.round(num * 100000);
+  }
+
+  // 2. Crores / Cr (e.g. "1 crore", "2.5 cr")
+  const croreMatch = q.match(/(\d+(?:\.\d+)?)\s*(?:crores?|cr)\b/i);
+  if (croreMatch && croreMatch[1]) {
+    const num = parseFloat(croreMatch[1]);
+    if (!isNaN(num)) return Math.round(num * 10000000);
+  }
+
+  // 3. Thousands / K (e.g. "10k", "50k", "7.5k")
+  const kMatch = q.match(/(\d+(?:\.\d+)?)\s*k\b/i);
+  if (kMatch && kMatch[1]) {
+    const num = parseFloat(kMatch[1]);
+    if (!isNaN(num)) return Math.round(num * 1000);
+  }
+
+  // 4. Standard numbers with commas or rupees (e.g. "₹5,000", "10,000", "100000", "rs 8000")
+  const priceMatch =
+    q.match(/(?:under|below|less than|within|budget of?|worth|max|price)\s*₹?\s*([\d,]+)/i) ||
+    q.match(/₹?\s*([\d,]+)\s*(?:budget|max|or less|rs|rupees|ruppess|inr)/i) ||
+    q.match(/₹\s*([\d,]+)/i) ||
+    q.match(/\b(\d{4,7})\b/);
+
+  if (priceMatch && priceMatch[1]) {
+    const cleanNum = priceMatch[1].replace(/,/g, '');
+    const parsedNum = parseInt(cleanNum, 10);
+    if (!isNaN(parsedNum) && parsedNum >= 500) {
+      return parsedNum;
+    }
+  }
+
+  return undefined;
+}
+
 export class AIShoppingService {
   /**
    * Process incoming client message through VELA AI Service
@@ -64,8 +114,10 @@ Analyze client intent and return the structured JSON output.`;
         parsed.recommendedProductIds?.includes(p.id)
       );
 
-      if (parsed.isOutfitRequest || message.toLowerCase().includes('outfit') || message.toLowerCase().includes('build')) {
-        const outfit = await ProductService.buildOutfit(undefined, undefined, 12000);
+      const maxPrice = extractPriceBudget(message);
+
+      if (parsed.isOutfitRequest || message.toLowerCase().includes('outfit') || message.toLowerCase().includes('design') || message.toLowerCase().includes('build')) {
+        const outfit = await ProductService.buildOutfit(undefined, undefined, maxPrice);
         return {
           content: parsed.content || `VELA has curated a complete VÉLORA ensemble for you.`,
           recommendedProducts: outfit.items,
@@ -91,26 +143,13 @@ Analyze client intent and return the structured JSON output.`;
   }
 
   /**
-   * Advanced Fallback Intent Engine with Robust Number & Comma Parsing
+   * Advanced Fallback Intent Engine with Robust Currency & Lakhs Parsing
    */
   private static async fallbackProcessQuery(userQuery: string): Promise<AIShoppingResponse> {
     const query = userQuery.toLowerCase();
 
-    // 1. Robust Price Limit Extractor (Handles commas like ₹5,000 -> 5000, 10,000 -> 10000)
-    let maxPrice: number | undefined;
-    const priceMatch =
-      query.match(/(?:under|below|less than|within|budget of?|max)\s*₹?\s*([\d,]+)/i) ||
-      query.match(/₹?\s*([\d,]+)\s*(?:budget|max|or less|rs|inr)/i) ||
-      query.match(/₹\s*([\d,]+)/i) ||
-      query.match(/\b(\d{4,5})\b/);
-
-    if (priceMatch && priceMatch[1]) {
-      const cleanNum = priceMatch[1].replace(/,/g, '');
-      const parsedNum = parseInt(cleanNum, 10);
-      if (!isNaN(parsedNum) && parsedNum >= 500) {
-        maxPrice = parsedNum;
-      }
-    }
+    // 1. Extract Price Budget (lacs, lakhs, cr, k, rupees, ₹)
+    const maxPrice: number | undefined = extractPriceBudget(userQuery);
 
     // 2. Extract Gender
     let gender: string | undefined;
@@ -131,10 +170,10 @@ Analyze client intent and return the structured JSON output.`;
     // 4. Extract Style
     let style: string | undefined;
     if (query.includes('minimal') || query.includes('clean') || query.includes('sleek')) style = 'Minimal';
-    else if (query.includes('glam') || query.includes('fancy')) style = 'Glam';
+    else if (query.includes('glam') || query.includes('fancy') || query.includes('expensive') || query.includes('luxury')) style = 'Glam';
     else if (query.includes('boho') || query.includes('relaxed')) style = 'Boho';
 
-    // 5. Specific Product Query Intent (e.g. "Tell me about Aurelia" or "Style the Aurelia Silk Wrap Midi Dress")
+    // 5. Specific Product Query Intent (e.g. "Tell me about Aurelia")
     const matchedProduct = PRODUCTS.find(
       (p) => query.includes(p.name.toLowerCase()) || query.includes(p.slug) || (p.name.length > 5 && query.includes(p.name.toLowerCase().split(' ')[0]))
     );
@@ -155,15 +194,20 @@ Analyze client intent and return the structured JSON output.`;
       };
     }
 
-    // 6. Gifting Intent (e.g., "gift for my sister under ₹5,000")
+    // 6. Gifting Intent
     if (query.includes('gift') || query.includes('present') || query.includes('sister') || query.includes('friend')) {
       let gifts = PRODUCTS.filter((p) => p.category === 'Accessories' || p.tags.includes('gift'));
-      if (maxPrice) gifts = gifts.filter((p) => p.price <= maxPrice);
+      if (typeof maxPrice === 'number') {
+        const targetPrice = maxPrice;
+        gifts = gifts.filter((p) => p.price <= targetPrice);
+      }
 
-      const selections = gifts.length > 0 ? gifts.slice(0, 4) : PRODUCTS.filter(p => p.price <= (maxPrice || 5000)).slice(0, 4);
+      const defaultMax = typeof maxPrice === 'number' ? maxPrice : 5000;
+      const selections = gifts.length > 0 ? gifts.slice(0, 4) : PRODUCTS.filter(p => p.price <= defaultMax).slice(0, 4);
+      const budgetStr = typeof maxPrice === 'number' ? ` within your ₹${maxPrice.toLocaleString('en-IN')} budget` : '';
 
       return {
-        content: `VELA has curated a selection of signature VÉLORA gifts${maxPrice ? ` within your ₹${maxPrice.toLocaleString('en-IN')} budget` : ''}. Each piece arrives in our signature hardbox packaging with personalized calligraphy notes.`,
+        content: `VELA has curated a selection of signature VÉLORA gifts${budgetStr}. Each piece arrives in our signature hardbox packaging with personalized calligraphy notes.`,
         recommendedProducts: selections,
         suggestedFollowups: [
           'Show gifts under ₹4,000',
@@ -174,14 +218,35 @@ Analyze client intent and return the structured JSON output.`;
       };
     }
 
-    // 7. Outfit Building Intent (e.g., "Build an outfit under ₹6,000" or "Create a summer outfit")
-    if (query.includes('outfit') || query.includes('ensemble') || query.includes('complete look') || query.includes('combine')) {
-      const outfit = await ProductService.buildOutfit(gender, occasion, maxPrice || 10000);
-      
-      let outfitDesc = `VELA has styled a complete VÉLORA outfit for you`;
-      if (occasion) outfitDesc += ` designed for your **${occasion}**`;
-      if (maxPrice) outfitDesc += ` within your **₹${maxPrice.toLocaleString('en-IN')}** budget`;
-      outfitDesc += `. The combined ensemble comes to **₹${outfit.totalOutfitCost.toLocaleString('en-IN')}**.`;
+    // 7. Outfit Building Intent (e.g. "DESIGN AN OUTFIT WORTH RUPPESS 10LACS", "Build an outfit under ₹6,000", "Create a luxury outfit")
+    if (
+      query.includes('outfit') ||
+      query.includes('design') ||
+      query.includes('build') ||
+      query.includes('ensemble') ||
+      query.includes('complete look') ||
+      query.includes('combine') ||
+      query.includes('style me') ||
+      query.includes('worth')
+    ) {
+      const outfit = await ProductService.buildOutfit(gender, occasion, maxPrice);
+
+      let outfitDesc = `VELA has curated an `;
+      if (typeof maxPrice === 'number' && maxPrice >= 100000) {
+        outfitDesc += `ultra-exclusive Haute Couture VÉLORA ensemble for your **₹${maxPrice.toLocaleString('en-IN')}** budget, bringing together our most prestigious Italian silk, Mongolian cashmere, and artisan leather creations.`;
+      } else {
+        outfitDesc += `exclusive VÉLORA ensemble for you`;
+        if (occasion) outfitDesc += ` designed for your **${occasion}**`;
+        if (typeof maxPrice === 'number') outfitDesc += ` within your **₹${maxPrice.toLocaleString('en-IN')}** budget`;
+        outfitDesc += `.`;
+      }
+
+      outfitDesc += ` The combined ensemble comes to **₹${outfit.totalOutfitCost.toLocaleString('en-IN')}**`;
+      if (typeof maxPrice === 'number' && maxPrice > 50000 && outfit.totalOutfitCost < maxPrice) {
+        outfitDesc += ` (the highest luxury tier in our current atelier collection).`;
+      } else {
+        outfitDesc += `.`;
+      }
 
       return {
         content: outfitDesc,
@@ -226,22 +291,25 @@ Analyze client intent and return the structured JSON output.`;
 
     let finalSelection = matches.length > 0 ? matches.slice(0, 4) : [];
     if (finalSelection.length === 0) {
-      finalSelection = PRODUCTS.filter((p) => (maxPrice ? p.price <= maxPrice : true)).slice(0, 4);
+      const maxLimit = typeof maxPrice === 'number' ? maxPrice : undefined;
+      finalSelection = PRODUCTS.filter((p) => (maxLimit ? p.price <= maxLimit : true)).slice(0, 4);
     }
+
+    const priceText = typeof maxPrice === 'number' ? ` within your **₹${maxPrice.toLocaleString('en-IN')}** budget` : '';
+    const budgetFollowup = typeof maxPrice === 'number' ? maxPrice.toLocaleString('en-IN') : '8,000';
 
     let intro = `VELA has selected these signature VÉLORA pieces for your consideration`;
     if (occasion) intro += ` designed for your **${occasion}**`;
-    if (maxPrice) intro += ` within your **₹${maxPrice.toLocaleString('en-IN')}** budget`;
-    intro += `.`;
+    intro += `${priceText}.`;
 
     return {
       content: `${intro} Each garment embodies master craftsmanship, pure silk/cashmere weaves, and timeless elegance.`,
-      recommendedProducts: finalSelection,
       suggestedFollowups: [
-        `Show options under ₹${maxPrice || 8000}`,
+        `Show options under ₹${budgetFollowup}`,
         `Would these work for an evening gala?`,
         `How do I choose the correct size?`
       ],
+      recommendedProducts: finalSelection,
       toolActionExecuted: 'searchProducts',
     };
   }
