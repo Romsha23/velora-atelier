@@ -17,12 +17,30 @@ export interface AIShoppingResponse {
 
 /**
  * Advanced Price & Indian Currency Unit Extractor
- * Parses lakhs, lacs, lakh, lac, crores, cr, k, commas, and rupees
+ * Parses lakhs, lacs, lakh, lac, crores, cr, thousand, thousands, k, word numbers, commas, and rupees
  */
 function extractPriceBudget(query: string): number | undefined {
   const q = query.toLowerCase();
 
-  // 1. Lakhs / Lacs / Lakh / Lac (e.g. "ruppess 10lacs", "10 lacs", "10 lakhs", "1 lakh", "2.5 lacs")
+  const wordNumbers: Record<string, number> = {
+    'one': 1, 'two': 2, 'three': 3, 'four': 4, 'five': 5,
+    'six': 6, 'seven': 7, 'eight': 8, 'nine': 9, 'ten': 10,
+    'fifteen': 15, 'twenty': 20, 'twenty five': 25, 'thirty': 30,
+    'forty': 40, 'fifty': 50, 'sixty': 60, 'seventy': 70,
+    'eighty': 80, 'ninety': 90, 'hundred': 100, 'one hundred': 100,
+  };
+
+  // 1. Check word numbers + thousand / lakh (e.g. "fifty thousand", "twenty lakhs")
+  for (const [word, num] of Object.entries(wordNumbers)) {
+    if (q.includes(`${word} thousand`) || q.includes(`${word} thousands`)) {
+      return num * 1000;
+    }
+    if (q.includes(`${word} lakh`) || q.includes(`${word} lakhs`) || q.includes(`${word} lac`) || q.includes(`${word} lacs`)) {
+      return num * 100000;
+    }
+  }
+
+  // 2. Lakhs / Lacs / Lakh / Lac (e.g. "ruppess 10lacs", "10 lacs", "10 lakhs", "1 lakh", "2.5 lacs")
   const lakhMatch =
     q.match(/(\d+(?:\.\d+)?)\s*(?:lacs|lakhs|lakh|lac|l)\b/i) ||
     q.match(/ruppess?\s*(\d+(?:\.\d+)?)\s*(?:lacs|lakhs|lakh|lac)\b/i) ||
@@ -33,21 +51,25 @@ function extractPriceBudget(query: string): number | undefined {
     if (!isNaN(num)) return Math.round(num * 100000);
   }
 
-  // 2. Crores / Cr (e.g. "1 crore", "2.5 cr")
+  // 3. Crores / Cr (e.g. "1 crore", "2.5 cr")
   const croreMatch = q.match(/(\d+(?:\.\d+)?)\s*(?:crores?|cr)\b/i);
   if (croreMatch && croreMatch[1]) {
     const num = parseFloat(croreMatch[1]);
     if (!isNaN(num)) return Math.round(num * 10000000);
   }
 
-  // 3. Thousands / K (e.g. "10k", "50k", "7.5k")
-  const kMatch = q.match(/(\d+(?:\.\d+)?)\s*k\b/i);
-  if (kMatch && kMatch[1]) {
-    const num = parseFloat(kMatch[1]);
+  // 4. Thousands / K (e.g. "50 thousand", "50k", "7.5k", "100 thousand")
+  const thousandMatch =
+    q.match(/(\d+(?:\.\d+)?)\s*(?:thousand|thousands|k)\b/i) ||
+    q.match(/ruppess?\s*(\d+(?:\.\d+)?)\s*(?:thousand|thousands|k)\b/i) ||
+    q.match(/(?:worth|budget of?|price|under|below|for)?\s*₹?\s*(\d+(?:\.\d+)?)\s*(?:thousand|thousands|k)\b/i);
+
+  if (thousandMatch && thousandMatch[1]) {
+    const num = parseFloat(thousandMatch[1]);
     if (!isNaN(num)) return Math.round(num * 1000);
   }
 
-  // 4. Standard numbers with commas or rupees (e.g. "₹5,000", "10,000", "100000", "rs 8000")
+  // 5. Standard numbers with commas or rupees (e.g. "₹5,000", "10,000", "50000", "rs 8000")
   const priceMatch =
     q.match(/(?:under|below|less than|within|budget of?|worth|max|price)\s*₹?\s*([\d,]+)/i) ||
     q.match(/₹?\s*([\d,]+)\s*(?:budget|max|or less|rs|rupees|ruppess|inr)/i) ||
@@ -116,8 +138,19 @@ Analyze client intent and return the structured JSON output.`;
 
       const maxPrice = extractPriceBudget(message);
 
-      if (parsed.isOutfitRequest || message.toLowerCase().includes('outfit') || message.toLowerCase().includes('design') || message.toLowerCase().includes('build')) {
-        const outfit = await ProductService.buildOutfit(undefined, undefined, maxPrice);
+      let gender: string | undefined;
+      const qLower = message.toLowerCase();
+      const femaleKeywords = ['women', 'woman', 'female', 'dress', 'gown', 'skirt', 'saree', 'sari', 'lehenga', 'anarkali', 'kurti', 'blouse', 'heels', 'her', 'sister', 'girl'];
+      const maleKeywords = ['men', 'man', 'male', 'sherwani', 'tuxedo', 'suit', 'blazer', 'him', 'boy'];
+
+      if (femaleKeywords.some((k) => qLower.includes(k))) {
+        gender = 'Women';
+      } else if (maleKeywords.some((k) => qLower.includes(k))) {
+        gender = 'Men';
+      }
+
+      if (parsed.isOutfitRequest || qLower.includes('outfit') || qLower.includes('design') || qLower.includes('build')) {
+        const outfit = await ProductService.buildOutfit(gender, undefined, maxPrice, message);
         return {
           content: parsed.content || `VELA has curated a complete VÉLORA ensemble for you.`,
           recommendedProducts: outfit.items,
@@ -148,15 +181,18 @@ Analyze client intent and return the structured JSON output.`;
   private static async fallbackProcessQuery(userQuery: string): Promise<AIShoppingResponse> {
     const query = userQuery.toLowerCase();
 
-    // 1. Extract Price Budget (lacs, lakhs, cr, k, rupees, ₹)
+    // 1. Extract Price Budget (lacs, lakhs, cr, thousand, k, rupees, ₹)
     const maxPrice: number | undefined = extractPriceBudget(userQuery);
 
     // 2. Extract Gender
     let gender: string | undefined;
-    if (query.includes('men') || query.includes('man') || query.includes('male') || query.includes('suit') || query.includes('blazer') || query.includes('him')) {
-      gender = 'Men';
-    } else if (query.includes('women') || query.includes('woman') || query.includes('female') || query.includes('dress') || query.includes('gown') || query.includes('skirt') || query.includes('her') || query.includes('sister')) {
+    const femaleKeywords = ['women', 'woman', 'female', 'dress', 'gown', 'skirt', 'saree', 'sari', 'lehenga', 'anarkali', 'kurti', 'blouse', 'heels', 'her', 'sister', 'girl'];
+    const maleKeywords = ['men', 'man', 'male', 'sherwani', 'tuxedo', 'suit', 'blazer', 'him', 'boy'];
+
+    if (femaleKeywords.some((k) => query.includes(k))) {
       gender = 'Women';
+    } else if (maleKeywords.some((k) => query.includes(k))) {
+      gender = 'Men';
     }
 
     // 3. Extract Occasion
@@ -170,7 +206,7 @@ Analyze client intent and return the structured JSON output.`;
     // 4. Extract Style
     let style: string | undefined;
     if (query.includes('minimal') || query.includes('clean') || query.includes('sleek')) style = 'Minimal';
-    else if (query.includes('glam') || query.includes('fancy') || query.includes('expensive') || query.includes('luxury')) style = 'Glam';
+    else if (query.includes('glam') || query.includes('fancy') || query.includes('expensive') || query.includes('luxury') || query.includes('ethnic') || query.includes('royal')) style = 'Glam';
     else if (query.includes('boho') || query.includes('relaxed')) style = 'Boho';
 
     // 5. Specific Product Query Intent (e.g. "Tell me about Aurelia")
@@ -218,7 +254,7 @@ Analyze client intent and return the structured JSON output.`;
       };
     }
 
-    // 7. Outfit Building Intent (e.g. "DESIGN AN OUTFIT WORTH RUPPESS 10LACS", "Build an outfit under ₹6,000", "Create a luxury outfit")
+    // 7. Outfit Building Intent (e.g. "DESIGN A SAREE WORTH RUPPES 50 THOUSAND", "Build an outfit under ₹6,000")
     if (
       query.includes('outfit') ||
       query.includes('design') ||
@@ -229,11 +265,11 @@ Analyze client intent and return the structured JSON output.`;
       query.includes('style me') ||
       query.includes('worth')
     ) {
-      const outfit = await ProductService.buildOutfit(gender, occasion, maxPrice);
+      const outfit = await ProductService.buildOutfit(gender, occasion, maxPrice, query);
 
       let outfitDesc = `VELA has curated an `;
       if (typeof maxPrice === 'number' && maxPrice >= 100000) {
-        outfitDesc += `ultra-exclusive Haute Couture VÉLORA ensemble for your **₹${maxPrice.toLocaleString('en-IN')}** budget, bringing together our most prestigious Italian silk, Mongolian cashmere, and artisan leather creations.`;
+        outfitDesc += `ultra-exclusive Haute Couture VÉLORA ensemble for your **₹${maxPrice.toLocaleString('en-IN')}** budget, bringing together our most prestigious Mulberry silk, zardosi handloom, Mongolian cashmere, and artisan leather creations.`;
       } else {
         outfitDesc += `exclusive VÉLORA ensemble for you`;
         if (occasion) outfitDesc += ` designed for your **${occasion}**`;
@@ -241,12 +277,7 @@ Analyze client intent and return the structured JSON output.`;
         outfitDesc += `.`;
       }
 
-      outfitDesc += ` The combined ensemble comes to **₹${outfit.totalOutfitCost.toLocaleString('en-IN')}**`;
-      if (typeof maxPrice === 'number' && maxPrice > 50000 && outfit.totalOutfitCost < maxPrice) {
-        outfitDesc += ` (the highest luxury tier in our current atelier collection).`;
-      } else {
-        outfitDesc += `.`;
-      }
+      outfitDesc += ` The combined ensemble comes to **₹${outfit.totalOutfitCost.toLocaleString('en-IN')}**.`;
 
       return {
         content: outfitDesc,
@@ -254,7 +285,7 @@ Analyze client intent and return the structured JSON output.`;
         suggestedFollowups: [
           'Can you adjust the budget?',
           'Show me alternative heels',
-          'What outerwear pairs with this?'
+          'What accessories pair with this?'
         ],
         outfitComposition: {
           items: outfit.items,

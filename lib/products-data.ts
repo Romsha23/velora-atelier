@@ -1132,5 +1132,147 @@ export const PRODUCTS: Product[] = [
     style: ['Classic', 'Glam'],
     gender: 'Women',
     pairsWith: ['prod-1', 'prod-6']
+  },
+  {
+    id: 'prod-33',
+    name: 'Royal Kanjivaram Pure Zari Silk Saree',
+    slug: 'royal-kanjivaram-pure-zari-silk-saree',
+    price: 28999,
+    originalPrice: 35000,
+    category: 'Women',
+    subcategory: 'Sarees & Ethnic Wear',
+    description: 'Handwoven in Kanchipuram from 100% pure Mulberry silk. Woven with 24K gold-plated zari threads, intricate peacock and floral temple borders, and a lavish brocade pallu.',
+    details: [
+      '100% Pure Mulberry Silk & 24K Gold Zari',
+      'Includes unstitched matching silk blouse piece',
+      'Handloom Silk Mark Certified',
+      'Dry clean only'
+    ],
+    materials: 'Mulberry Silk & 24K Gold Zari',
+    sizes: ['One Size'],
+    colors: [
+      { name: 'Royal Crimson Gold', hex: '#800020' },
+      { name: 'Emerald Temple Gold', hex: '#1C3B2B' }
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000&auto=format&fit=crop'
+    ],
+    rating: 5.0,
+    reviewCount: 42,
+    inStock: true,
+    isFeatured: true,
+    isTrending: true,
+    tags: ['saree', 'kanjivaram saree', 'silk saree', 'wedding saree', 'ethnic', 'traditional', 'luxury saree', 'gold zari'],
+    occasion: ['Wedding', 'Formal / Gala'],
+    style: ['Glam', 'Editorial', 'Classic'],
+    gender: 'Women',
+    pairsWith: ['prod-11', 'prod-19']
+  },
+  {
+    id: 'prod-34',
+    name: 'VÉLORA Haute Couture Zardosi Silk Saree',
+    slug: 'velora-haute-couture-zardosi-silk-saree',
+    price: 48999,
+    originalPrice: 55000,
+    category: 'Women',
+    subcategory: 'Sarees & Ethnic Wear',
+    description: 'An ethereal organza silk saree hand-embroidered by master artisans with micro zardosi wirework, pearls, and hand-cut sequins. Accompanied by a hand-worked velvet blouse.',
+    details: [
+      'Heavy Organza Silk with Pearl & Zardosi Hand Embroidery',
+      'Includes designer embroidered velvet blouse fabric',
+      'Custom handcrafted piece',
+      'Dry clean only'
+    ],
+    materials: 'Organza Silk & Velvet',
+    sizes: ['One Size'],
+    colors: [
+      { name: 'Champagne Ivory Gold', hex: '#FDFBF7' },
+      { name: 'Rose Quartz Gold', hex: '#E3C6B4' }
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000&auto=format&fit=crop'
+    ],
+    rating: 5.0,
+    reviewCount: 18,
+    inStock: true,
+    isFeatured: true,
+    isNew: true,
+    tags: ['saree', 'zardosi saree', 'couture saree', 'organza saree', 'wedding saree', 'luxury saree', 'designer saree'],
+    occasion: ['Wedding', 'Formal / Gala'],
+    style: ['Glam', 'Editorial'],
+    gender: 'Women',
+    pairsWith: ['prod-11', 'prod-28']
+  },
+  {
+    id: 'prod-35',
+    name: 'Banarasi Royal Brocade Silk Lehenga Set',
+    slug: 'banarasi-royal-brocade-silk-lehenga-set',
+    price: 42999,
+    originalPrice: 49999,
+    category: 'Women',
+    subcategory: 'Lehengas & Ethnic Wear',
+    description: 'A regal 3-piece Banarasi silk lehenga handcrafted with intricate silver zari kadwa motifs, paired with a fitted dupion silk choli and sheer zardosi-bordered dupatta.',
+    details: [
+      '100% Banarasi Silk Lehenga & Dupion Choli',
+      'Hand-cut silver zari motifs with net dupatta',
+      'Includes unstitched blouse and pre-flared skirt',
+      'Dry clean only'
+    ],
+    materials: 'Banarasi Silk & Organza',
+    sizes: ['XS', 'S', 'M', 'L', 'XL'],
+    colors: [
+      { name: 'Midnight Wine', hex: '#58111A' },
+      { name: 'Royal Peacock Blue', hex: '#1C3B2B' }
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1583391733956-3750e0ff4e8b?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?q=80&w=1000&auto=format&fit=crop'
+    ],
+    rating: 4.9,
+    reviewCount: 25,
+    inStock: true,
+    isFeatured: true,
+    tags: ['lehenga', 'banarasi lehenga', 'ethnic', 'wedding lehenga', 'bridal lehenga', 'luxury lehenga'],
+    occasion: ['Wedding', 'Formal / Gala'],
+    style: ['Glam', 'Editorial'],
+    gender: 'Women',
+    pairsWith: ['prod-11', 'prod-19']
+  },
+  {
+    id: 'prod-36',
+    name: 'Maharaja Hand-Embroidered Velvet Sherwani Set',
+    slug: 'maharaja-hand-embroidered-velvet-sherwani-set',
+    price: 45999,
+    originalPrice: 52000,
+    category: 'Men',
+    subcategory: 'Sherwanis & Suits',
+    description: 'Pinnacle royal sherwani in deep midnight navy silk velvet, embellished with hand-embroidered dabka work, zardosi mandarin collar, and silk churidar trousers.',
+    details: [
+      'Heavy Silk Velvet Outer with Silk Lining',
+      'Includes silk churidar pants & matching embroidered stole',
+      'Handcrafted bullion embroidery',
+      'Dry clean only'
+    ],
+    materials: 'Silk Velvet & Pure Silk',
+    sizes: ['S', 'M', 'L', 'XL'],
+    colors: [
+      { name: 'Midnight Navy & Gold', hex: '#1B263B' },
+      { name: 'Imperial Onyx & Gold', hex: '#111111' }
+    ],
+    images: [
+      'https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=1000&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1617137984095-74e4e5e3613f?q=80&w=1000&auto=format&fit=crop'
+    ],
+    rating: 5.0,
+    reviewCount: 17,
+    inStock: true,
+    isFeatured: true,
+    tags: ['sherwani', 'groom sherwani', 'wedding sherwani', 'men ethnic', 'royal suit'],
+    occasion: ['Wedding', 'Formal / Gala'],
+    style: ['Glam', 'Editorial', 'Classic'],
+    gender: 'Men',
+    pairsWith: ['prod-9', 'prod-17']
   }
 ];

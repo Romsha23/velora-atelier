@@ -112,12 +112,13 @@ export class ProductService {
   }
 
   /**
-   * AI Outfit Builder: Assembles a harmonized multi-piece outfit matching gender, occasion, and max budget limit
+   * AI Outfit Builder: Assembles a harmonized multi-piece outfit matching gender, occasion, max budget limit, and specific garment keywords
    */
   static async buildOutfit(
     gender?: string,
     occasion?: string,
-    maxBudget?: number
+    maxBudget?: number,
+    searchQuery?: string
   ): Promise<{ items: Product[]; totalOutfitCost: number }> {
     let pool = [...PRODUCTS];
 
@@ -135,60 +136,90 @@ export class ProductService {
     const isHighBudget = !maxBudget || maxBudget >= 30000;
     const maxLimit = maxBudget && maxBudget > 0 ? maxBudget : 1000000;
 
-    // Sort items to match budget intent:
-    // High budget -> Sort descending by price to pick premier luxury pieces
-    // Strict budget -> Sort descending within affordable limit
+    // Strictly filter out items that exceed maxLimit
+    pool = pool.filter((p) => p.price <= maxLimit);
+
+    // Sort items to match budget intent
     pool.sort((a, b) => (isHighBudget ? b.price - a.price : a.price - b.price));
 
     const outfitItems: Product[] = [];
     let currentCost = 0;
 
-    // 1. Pick Primary Garment (Outerwear, Dress, Suit, Blazer)
+    // Extract specific clothing keywords from query (e.g. saree, lehenga, gown, dress, sherwani, suit, blazer)
+    const q = (searchQuery || '').toLowerCase();
+    const garmentKeywords = ['saree', 'sari', 'lehenga', 'gown', 'dress', 'sherwani', 'suit', 'blazer', 'trench', 'cardigan', 'trousers', 'skirt', 'top'];
+    const matchedKeyword = garmentKeywords.find((k) => q.includes(k));
+
+    // 1. Pick Primary Garment (Outerwear, Dress, Saree, Lehenga, Suit, Blazer)
     const garments = pool.filter(
       (p) => p.category === 'Women' || p.category === 'Men'
     );
-    const garment1 = garments.find((p) => p.price <= maxLimit - currentCost) || garments[0];
+
+    let garment1: Product | undefined;
+    if (matchedKeyword) {
+      garment1 = garments.find(
+        (p) =>
+          (p.name.toLowerCase().includes(matchedKeyword) ||
+           p.subcategory.toLowerCase().includes(matchedKeyword) ||
+           p.tags.some((t) => t.toLowerCase().includes(matchedKeyword))) &&
+          p.price <= maxLimit - currentCost
+      );
+    }
+
+    if (!garment1) {
+      garment1 = garments.find((p) => p.price <= maxLimit - currentCost);
+    }
 
     if (garment1) {
       outfitItems.push(garment1);
       currentCost += garment1.price;
     }
 
-    // 2. Pick Secondary Garment (Trousers, Skirt, Sweater) if budget allows & category differs
-    const secondaryGarments = pool.filter(
-      (p) =>
-        (p.category === 'Women' || p.category === 'Men') &&
-        p.id !== garment1?.id &&
-        p.subcategory !== garment1?.subcategory &&
-        p.price <= maxLimit - currentCost
+    // 2. Pick Secondary Garment if budget permits & category differs (skip for one-piece Sarees/Lehengas/Gowns)
+    const isOnePiece = garment1 && (
+      garment1.subcategory.toLowerCase().includes('saree') ||
+      garment1.subcategory.toLowerCase().includes('lehenga') ||
+      garment1.subcategory.toLowerCase().includes('dress') ||
+      garment1.name.toLowerCase().includes('saree') ||
+      garment1.name.toLowerCase().includes('gown')
     );
 
-    const garment2 = secondaryGarments.find((p) => p.price <= maxLimit - currentCost);
-    if (garment2 && outfitItems.length < 3) {
-      outfitItems.push(garment2);
-      currentCost += garment2.price;
+    if (!isOnePiece) {
+      const secondaryGarments = pool.filter(
+        (p) =>
+          (p.category === 'Women' || p.category === 'Men') &&
+          p.id !== garment1?.id &&
+          p.subcategory !== garment1?.subcategory &&
+          p.price <= maxLimit - currentCost
+      );
+
+      const garment2 = secondaryGarments.find((p) => p.price <= maxLimit - currentCost);
+      if (garment2 && outfitItems.length < 3 && currentCost + garment2.price <= maxLimit) {
+        outfitItems.push(garment2);
+        currentCost += garment2.price;
+      }
     }
 
-    // 3. Pick Luxury Accessory (Leather Tote, Sunglasses, Jewelry, Silk Scarf)
+    // 3. Pick Luxury Accessory if budget permits
     const accessories = pool.filter(
       (p) => p.category === 'Accessories' && p.price <= maxLimit - currentCost
     );
     const sortedAccessories = [...accessories].sort((a, b) => (isHighBudget ? b.price - a.price : a.price - b.price));
-    const accessory = sortedAccessories[0];
+    const accessory = sortedAccessories.find((p) => p.price <= maxLimit - currentCost);
 
-    if (accessory && !outfitItems.some((i) => i.id === accessory.id)) {
+    if (accessory && !outfitItems.some((i) => i.id === accessory.id) && currentCost + accessory.price <= maxLimit) {
       outfitItems.push(accessory);
       currentCost += accessory.price;
     }
 
-    // 4. Pick Artisan Footwear (Heels, Loafers, Boots)
+    // 4. Pick Artisan Footwear if budget permits
     const footwears = pool.filter(
       (p) => p.category === 'Footwear' && p.price <= maxLimit - currentCost
     );
     const sortedFootwear = [...footwears].sort((a, b) => (isHighBudget ? b.price - a.price : a.price - b.price));
-    const footwear = sortedFootwear[0];
+    const footwear = sortedFootwear.find((p) => p.price <= maxLimit - currentCost);
 
-    if (footwear && !outfitItems.some((i) => i.id === footwear.id)) {
+    if (footwear && !outfitItems.some((i) => i.id === footwear.id) && currentCost + footwear.price <= maxLimit) {
       outfitItems.push(footwear);
       currentCost += footwear.price;
     }
