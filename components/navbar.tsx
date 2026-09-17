@@ -3,7 +3,8 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ShoppingBag, Heart, Search, Menu, X, Sparkles, Compass } from 'lucide-react';
+import { ShoppingBag, Heart, Search, Menu, X, Sparkles, User as UserIcon } from 'lucide-react';
+import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { useAIStylist } from '@/lib/ai-stylist-context';
@@ -96,7 +97,7 @@ export default function Navbar() {
           </div>
 
           {/* Right: Actions */}
-          <div className="flex items-center space-x-4 sm:space-x-6">
+          <div className="flex items-center space-x-3 sm:space-x-5">
             <button
               onClick={() => setSearchOpen(true)}
               className="text-white/80 hover:text-[#C5A059] transition-colors flex items-center space-x-1"
@@ -139,6 +140,38 @@ export default function Navbar() {
                 </span>
               )}
             </button>
+
+            {/* Authentication States via Clerk */}
+            <div className="flex items-center pl-1 border-l border-[#22222E] ml-1">
+              <SignedIn>
+                <div className="flex items-center space-x-3">
+                  <Link
+                    href="/account"
+                    className="text-xs uppercase tracking-wider text-white/80 hover:text-[#C5A059] transition-colors hidden sm:block font-medium"
+                  >
+                    VIP Salon
+                  </Link>
+                  <UserButton
+                    afterSignOutUrl="/"
+                    appearance={{
+                      elements: {
+                        avatarBox: 'w-8 h-8 border border-[#C5A059]',
+                      },
+                    }}
+                  />
+                </div>
+              </SignedIn>
+
+              <SignedOut>
+                <Link
+                  href="/sign-in"
+                  className="bg-[#C5A059]/10 hover:bg-[#C5A059] text-[#C5A059] hover:text-black border border-[#C5A059]/50 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all shadow"
+                >
+                  <UserIcon size={13} />
+                  <span>VIP Sign In</span>
+                </Link>
+              </SignedOut>
+            </div>
           </div>
         </div>
 
@@ -159,12 +192,33 @@ export default function Navbar() {
 
               <hr className="border-[#22222A]" />
 
+              <SignedIn>
+                <Link
+                  href="/account"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="block font-serif text-xl text-[#C5A059]"
+                >
+                  My VIP Account & Orders
+                </Link>
+              </SignedIn>
+
+              <SignedOut>
+                <Link
+                  href="/sign-in"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className="w-full flex items-center justify-center space-x-2 bg-[#C5A059] text-black font-bold py-3 rounded text-xs uppercase tracking-widest"
+                >
+                  <UserIcon size={16} />
+                  <span>VIP Client Login / Register</span>
+                </Link>
+              </SignedOut>
+
               <button
                 onClick={() => {
                   setMobileMenuOpen(false);
                   openAI();
                 }}
-                className="w-full flex items-center justify-center space-x-2 bg-[#C5A059] text-black font-medium py-3 rounded text-xs uppercase tracking-widest"
+                className="w-full flex items-center justify-center space-x-2 bg-[#1A1A24] border border-[#C5A059]/40 text-[#C5A059] font-medium py-3 rounded text-xs uppercase tracking-widest"
               >
                 <Sparkles size={16} />
                 <span>Consult VELA AI Stylist</span>

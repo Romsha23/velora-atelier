@@ -3,10 +3,12 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { User, Package, MapPin, Heart, ShieldCheck, Clock, ExternalLink } from 'lucide-react';
+import { useUser, UserButton } from '@clerk/nextjs';
+import { User as UserIcon, Package, MapPin, Heart, ShieldCheck, ExternalLink, LogIn } from 'lucide-react';
 import { Order } from '@/types';
 
 export default function AccountPage() {
+  const { user, isLoaded, isSignedIn } = useUser();
   const [orders, setOrders] = useState<Order[]>([]);
   const [activeTab, setActiveTab] = useState<'orders' | 'profile' | 'addresses'>('orders');
 
@@ -19,23 +21,34 @@ export default function AccountPage() {
     }
   }, []);
 
+  const userName = user?.fullName || user?.firstName || 'Atelier VIP Member';
+  const userEmail = user?.primaryEmailAddress?.emailAddress || 'vip@atelier.com';
+  const userAvatar = user?.imageUrl;
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-10">
       {/* Client Profile Header */}
       <div className="bg-[#12121A] border border-[#20202E] rounded-2xl p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
         <div className="flex items-center space-x-5">
-          <div className="w-16 h-16 rounded-full bg-[#1C1C2A] border-2 border-[#C5A059] flex items-center justify-center text-[#C5A059] font-serif text-2xl font-bold shadow-md">
-            É
-          </div>
+          {userAvatar ? (
+            <div className="relative w-16 h-16 rounded-full overflow-hidden border-2 border-[#C5A059] shadow-md shrink-0">
+              <Image src={userAvatar} alt={userName} fill className="object-cover" />
+            </div>
+          ) : (
+            <div className="w-16 h-16 rounded-full bg-[#1C1C2A] border-2 border-[#C5A059] flex items-center justify-center text-[#C5A059] font-serif text-2xl font-bold shadow-md shrink-0">
+              {userName.charAt(0)}
+            </div>
+          )}
+
           <div>
             <div className="flex items-center space-x-2">
-              <h1 className="font-serif text-2xl text-white font-normal">Atelier VIP Member</h1>
+              <h1 className="font-serif text-2xl text-white font-normal">{userName}</h1>
               <span className="bg-[#C5A059]/20 text-[#C5A059] text-[10px] uppercase font-bold tracking-widest px-2.5 py-0.5 rounded border border-[#C5A059]/40">
-                Platinum Status
+                {isSignedIn ? 'Verified Member' : 'Guest VIP Status'}
               </span>
             </div>
             <p className="text-xs text-white/50 mt-1">
-              Member since 2026 • Exclusive Access to Private Trunk Shows
+              {userEmail} • Exclusive Access to VÉLORA Private Trunk Shows
             </p>
           </div>
         </div>
@@ -49,8 +62,30 @@ export default function AccountPage() {
             <span className="text-white/40 block text-[10px] uppercase tracking-widest">Reward Tier</span>
             <strong className="text-[#C5A059] text-base font-bold">5,400 pts</strong>
           </div>
+
+          {isSignedIn && (
+            <div className="pl-2">
+              <UserButton afterSignOutUrl="/" />
+            </div>
+          )}
         </div>
       </div>
+
+      {!isSignedIn && (
+        <div className="bg-[#161622] border border-[#C5A059]/30 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs">
+          <div className="flex items-center space-x-3 text-white/80">
+            <ShieldCheck size={18} className="text-[#C5A059] shrink-0" />
+            <span>Sign in to save your personal recommendations and synchronize your order history across devices.</span>
+          </div>
+          <Link
+            href="/sign-in"
+            className="bg-[#C5A059] hover:bg-[#D4AF37] text-black font-bold px-4 py-2 rounded-lg uppercase tracking-wider shrink-0 flex items-center space-x-1.5 transition-all"
+          >
+            <LogIn size={14} />
+            <span>Sign In Now</span>
+          </Link>
+        </div>
+      )}
 
       {/* Account Navigation Tabs */}
       <div className="flex border-b border-[#1C1C26] space-x-8 text-xs uppercase tracking-widest font-medium">
@@ -73,7 +108,7 @@ export default function AccountPage() {
               : 'text-white/60 hover:text-white'
           }`}
         >
-          <User size={16} />
+          <UserIcon size={16} />
           <span>Client Profile</span>
         </button>
         <button
@@ -171,11 +206,11 @@ export default function AccountPage() {
           <div className="space-y-4 text-xs">
             <div>
               <label className="text-white/40 block text-[10px] uppercase tracking-widest mb-1">Full Name</label>
-              <input type="text" readOnly value="Countess Client" className="w-full bg-[#181824] border border-[#262638] text-white p-3 rounded-lg" />
+              <input type="text" readOnly value={userName} className="w-full bg-[#181824] border border-[#262638] text-white p-3 rounded-lg" />
             </div>
             <div>
               <label className="text-white/40 block text-[10px] uppercase tracking-widest mb-1">Email Address</label>
-              <input type="email" readOnly value="vip@atelier.com" className="w-full bg-[#181824] border border-[#262638] text-white p-3 rounded-lg" />
+              <input type="email" readOnly value={userEmail} className="w-full bg-[#181824] border border-[#262638] text-white p-3 rounded-lg" />
             </div>
             <div>
               <label className="text-white/40 block text-[10px] uppercase tracking-widest mb-1">Preferred Atelier Currency</label>

@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { ClerkProvider } from '@clerk/nextjs';
 import { Playfair_Display, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 import { CartProvider, useCart } from '@/lib/cart-context';
@@ -89,23 +90,37 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${serifFont.variable} ${sansFont.variable}`}>
-      <head>
-        <title>VÉLORA | Curated for your style. (AI Personal Stylist: VELA)</title>
-        <meta
-          name="description"
-          content="VÉLORA boutique fashion platform powered by VELA, your intelligent personal shopper."
-        />
-      </head>
-      <body className="font-sans antialiased bg-[#0A0A0C]">
-        <CartProvider>
-          <WishlistProvider>
-            <AIStylistProvider>
-              <MainLayoutContent>{children}</MainLayoutContent>
-            </AIStylistProvider>
-          </WishlistProvider>
-        </CartProvider>
-      </body>
-    </html>
+    <ClerkProvider
+      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
+      appearance={{
+        layout: {
+          socialButtonsVariant: 'iconButton',
+        },
+        variables: {
+          colorPrimary: '#C5A059',
+          colorBackground: '#12121A',
+          colorText: '#FFFFFF',
+        },
+      }}
+    >
+      <html lang="en" className={`${serifFont.variable} ${sansFont.variable}`}>
+        <head>
+          <title>VÉLORA | Curated for your style. (AI Personal Stylist: VELA)</title>
+          <meta
+            name="description"
+            content="VÉLORA boutique fashion platform powered by VELA, your intelligent personal shopper."
+          />
+        </head>
+        <body className="font-sans antialiased bg-[#0A0A0C]">
+          <CartProvider>
+            <WishlistProvider>
+              <AIStylistProvider>
+                <MainLayoutContent>{children}</MainLayoutContent>
+              </AIStylistProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
