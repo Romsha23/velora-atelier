@@ -3,12 +3,13 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Next.js-15.1+-000000?style=for-the-badge&logo=nextdotjs&logoColor=white" alt="Next.js 15" />
   <img src="https://img.shields.io/badge/React-19.0-61DAFB?style=for-the-badge&logo=react&logoColor=black" alt="React 19" />
+  <img src="https://img.shields.io/badge/Clerk-Authentication-6C47FF?style=for-the-badge&logo=clerk&logoColor=white" alt="Clerk Auth" />
   <img src="https://img.shields.io/badge/TypeScript-5.6-3178C6?style=for-the-badge&logo=typescript&logoColor=white" alt="TypeScript" />
   <img src="https://img.shields.io/badge/Tailwind_CSS-3.4-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" alt="Tailwind CSS" />
   <img src="https://img.shields.io/badge/Vercel-Deployed-000000?style=for-the-badge&logo=vercel&logoColor=white" alt="Vercel Deployed" />
 </p>
 
-> **VÉLORA** (*"Curated for your style."*) is a full-stack, production-grade luxury fashion e-commerce platform integrated with **VELA**, an intelligent AI Personal Stylist powered by Google Gemini API & dynamic intent tool execution.
+> **VÉLORA** (*"Curated for your style."*) is a full-stack, production-grade luxury fashion e-commerce platform integrated with **VELA**, an intelligent AI Personal Stylist powered by Google Gemini API, Clerk Authentication & dynamic intent tool execution.
 
 ---
 
@@ -16,24 +17,30 @@
 
 - 🌐 **Live Production Deployment**: [https://elan-atelier-eight.vercel.app](https://elan-atelier-eight.vercel.app)
 - 🐙 **GitHub Repository**: [https://github.com/Romsha23/velora-atelier](https://github.com/Romsha23/velora-atelier)
+- 🔑 **Sign In Page**: [https://elan-atelier-eight.vercel.app/sign-in](https://elan-atelier-eight.vercel.app/sign-in)
 - 👤 **Author & Lead Architect**: [Romsha Wadhwa (@Romsha23)](https://github.com/Romsha23)
 
 ---
 
 ## 🌟 Key Features & Experience Design
 
-### 🤖 1. VELA — Intelligent AI Personal Stylist
+### 🔑 1. Clerk Authentication & VIP Salon
+- **Clerk Auth Engine (`@clerk/nextjs`)**: Seamless user authentication with Clerk Middleware protecting client state and VIP user routes.
+- **Custom Branded Auth Views**: Custom obsidian & gold styled Sign-In ([`/sign-in`](https://elan-atelier-eight.vercel.app/sign-in)) and Sign-Up ([`/sign-up`](https://elan-atelier-eight.vercel.app/sign-up)) pages.
+- **User State Synchronization**: Real-time user avatar, email, full name, and user profile management integrated into the top navigation header and VIP Client Account page ([`/account`](https://elan-atelier-eight.vercel.app/account)).
+
+### 🤖 2. VELA — Intelligent AI Personal Stylist
 - **Natural Language Intent Parsing**: Extracts target categories, occasions (*gala, wedding, date night, resort*), style aesthetics (*minimalist, editorial, avant-garde*), color choices, and precise price budgets in **₹ INR** (e.g., *"Build an outfit under ₹5,000"*).
 - **Controlled Function / Tool Calling**: Executes real-time database query tools (`searchProducts`, `filterByBudget`, `getProductsByOccasion`, `buildOutfit`) to guarantee zero hallucinated items.
 - **Interactive AI Outfit Builder Cards**: Generates complete multi-piece ensembles (Top + Bottom + Accessory + Footwear) rendered in-chat with single-click **"Add Complete Outfit to Bag"** and **"Save Look to Wishlist"** CTAs.
 - **Zod Schema Engine**: Strictly validates incoming chat requests (`AIChatRequestSchema`) and dynamic tool payloads. Includes an offline intent parser fallback when API keys are not supplied.
 
-### 🎨 2. Creative Boutique Features
+### 🎨 3. Creative Boutique Features
 - **Atmosphere Mood Dial**: Real-time visual ambiance filter modifying page typography, color accents, and featured edits (*Minimalist, Editorial Chic, Avant-Garde, Evening Luxury, Riviera Resort*).
 - **Digital Runway Studio (`/runway`)**: Interactive styling canvas where clients drag, drop, compose, and preview outfit combinations before purchasing.
 - **Editorial Journal Magazine (`/journal`)**: Fashion lookbook showcasing seasonal trends, styling tips, and instant **"Shop the Look"** functionality.
 
-### 🛒 3. Full-Stack E-Commerce Architecture
+### 🛒 4. Full-Stack E-Commerce Architecture
 - **Multi-Faceted Search & Filter (`/shop`)**: Dynamic filtering across 32 luxury fashion items by category, price slider (₹3,000 to ₹25,000), sizes (`XS` to `XL`, `38` to `43`), occasion tags, colors, and live sorting.
 - **Product Specs & Recommendations (`/product/[slug]`)**: Multi-angle image gallery switcher, fabric care specs, size guides, and **"Complete the Ensemble"** cross-sells.
 - **Persistent Shopping Bag & Wishlist**: Slide-over drawer and full bag page with live shipping threshold progress bars and promo code validation (`VELORA10` for 10% off).
@@ -46,6 +53,7 @@
 | Layer | Technology |
 | :--- | :--- |
 | **Frontend Framework** | Next.js 15.1+ (App Router), React 19 |
+| **Authentication** | Clerk Authentication (`@clerk/nextjs`) |
 | **Language** | TypeScript (Strict Mode) |
 | **Styling** | Tailwind CSS, Playfair Display (Serif), Plus Jakarta Sans (Sans) |
 | **Icons & Motion** | `lucide-react`, `framer-motion` |
@@ -63,8 +71,10 @@
 ```
 velora-atelier/
 ├── app/
-│   ├── layout.tsx                # Root layout with VÉLORA styling & providers
+│   ├── layout.tsx                # Root layout with ClerkProvider & VÉLORA providers
 │   ├── page.tsx                  # Landing page (Hero, Mood Dial, Curated Edit, Journal)
+│   ├── sign-in/[[...sign-in]]/   # Clerk Sign-In Page
+│   ├── sign-up/[[...sign-up]]/   # Clerk Sign-Up Page
 │   ├── shop/page.tsx             # Multi-faceted search & collection page
 │   ├── product/[slug]/page.tsx   # Product detail page & ensemble builder
 │   ├── runway/page.tsx           # Digital Runway Studio Canvas
@@ -72,16 +82,16 @@ velora-atelier/
 │   ├── cart/page.tsx             # Shopping bag page
 │   ├── checkout/page.tsx         # Concierge checkout form
 │   ├── order-confirmation/[id]/  # Order confirmation & live courier tracker
-│   ├── order-confirmation/       # Active order lookup fallback
 │   ├── wishlist/page.tsx         # Saved wishlist page
-│   ├── account/page.tsx          # Client account profile
+│   ├── account/page.tsx          # Client account profile (Clerk User Integration)
 │   ├── not-found.tsx             # Custom luxury 404 page
 │   └── api/
 │       ├── ai/chat/route.ts      # VELA AI endpoint with tool calling
 │       ├── products/route.ts     # Product search & filtering API
 │       └── orders/route.ts       # Server-side price-verified order API
+├── middleware.ts                 # Clerk Authentication Middleware
 ├── components/
-│   ├── navbar.tsx                # Top navigation header
+│   ├── navbar.tsx                # Top navigation header with Clerk UserButton
 │   ├── footer.tsx                # Footer with author links & concierge info
 │   ├── product-card.tsx          # Interactive product card
 │   ├── mood-dial.tsx             # Real-time ambiance mood selector
@@ -125,12 +135,19 @@ npm install
 ### 3. Environment Variables
 Create a `.env` file in the project root:
 ```env
+# Clerk Authentication Keys
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_ZWFzeS10YXBpci03MDM5LmNsZXJrLmFjY291bnRzLmRldiQ
+CLERK_SECRET_KEY=sk_test_85SQ6L1URBzYQhVGGmOvQ4qaQEeaexrui1M1jyfUuA
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
+NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
+NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/account
+NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/account
+
 # Optional: Google Gemini API Key
 GEMINI_API_KEY=your_gemini_api_key_here
 
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 ```
-*Note: If `GEMINI_API_KEY` is not provided, VELA automatically activates its built-in natural language intent parser fallback to answer queries, parse budget numbers, and build outfits.*
 
 ### 4. Run Development Server
 ```bash
@@ -148,9 +165,9 @@ npm run start
 
 ## 🔒 Security & Server-Side Validation
 
+- **Clerk Route Protection**: Middleware safeguards user data and synchronizes identity securely.
 - **Server Price Recalculation**: Subtotals are re-calculated on the server inside `/api/orders` by retrieving canonical prices from `PRODUCTS`, preventing client-side DOM tampering.
 - **Zod Data Sanitization**: All API inputs, budget limits, and checkout payloads are strictly parsed and validated with Zod before processing.
-- **CVE Compliance**: Package dependencies are configured to satisfy current security standards for production edge deployment.
 
 ---
 
