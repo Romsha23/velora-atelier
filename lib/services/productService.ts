@@ -57,21 +57,27 @@ export class ProductService {
 
     if (params.searchQuery && params.searchQuery.trim() !== '') {
       const q = params.searchQuery.toLowerCase();
-      const stopWords = ['under', 'below', 'less', 'than', 'budget', 'for', 'show', 'me', 'find', 'need', 'want', 'something', 'with', 'and', 'look', 'outfit', 'a', 'an', 'the', 'velora', 'vela'];
-      const searchTerms = q
+      const stopWords = [
+        'under', 'below', 'less', 'than', 'budget', 'for', 'show', 'me', 'find',
+        'need', 'want', 'something', 'with', 'and', 'look', 'outfit', 'a', 'an',
+        'the', 'velora', 'vela', 'design', 'build', 'worth', 'create', 'give',
+        'lakh', 'lakhs', 'lac', 'lacs', 'thousand', 'thousands', 'cr', 'crore',
+        'crores', 'rs', 'rupees', 'ruppess', 'inr', 'price', 'max'
+      ];
+      const tokens = q
         .split(/\s+/)
-        .filter((w) => !stopWords.includes(w) && !/^\d+$/.test(w))
-        .join(' ');
+        .filter((w) => !stopWords.includes(w) && !/^\d+$/.test(w));
 
-      if (searchTerms.length > 0) {
-        const matches = filtered.filter(
-          (p) =>
-            p.name.toLowerCase().includes(searchTerms) ||
-            p.description.toLowerCase().includes(searchTerms) ||
-            p.tags.some((t) => t.toLowerCase().includes(searchTerms)) ||
-            p.subcategory.toLowerCase().includes(searchTerms) ||
-            p.materials.toLowerCase().includes(searchTerms) ||
-            p.style.some((s) => s.toLowerCase().includes(searchTerms))
+      if (tokens.length > 0) {
+        const matches = filtered.filter((p) =>
+          tokens.some((token) =>
+            p.name.toLowerCase().includes(token) ||
+            p.subcategory.toLowerCase().includes(token) ||
+            p.category.toLowerCase().includes(token) ||
+            p.description.toLowerCase().includes(token) ||
+            p.tags.some((t) => t.toLowerCase().includes(token)) ||
+            p.materials.toLowerCase().includes(token)
+          )
         );
         if (matches.length > 0) filtered = matches;
       }

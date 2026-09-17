@@ -112,6 +112,9 @@ export class AIShoppingService {
         systemInstruction: `You are VELA, the intelligent personal stylist at VÉLORA, a luxury boutique fashion house ("Curated for your style.").
 Your persona is articulate, sophisticated, warm, and fashion-forward.
 Suggest real products from our database based on natural language intent (budget in ₹ INR, occasion, aesthetic style, color, category).
+Important Rules:
+1. If the client asks for a specific single item (e.g. "heel", "heels", "saree", "dress", "bag", "blazer", "necklace"), set "isOutfitRequest": false and recommend products matching that item.
+2. Only set "isOutfitRequest": true if the client explicitly asks for an "outfit", "ensemble", "complete look", or "full look".
 Format your response as valid JSON adhering strictly to:
 {
   "content": "Your elegant advice to the client...",
@@ -149,7 +152,22 @@ Analyze client intent and return the structured JSON output.`;
         gender = 'Men';
       }
 
-      if (parsed.isOutfitRequest || qLower.includes('outfit') || qLower.includes('design') || qLower.includes('build')) {
+      const isSpecificItemQuery =
+        qLower.includes('heel') || qLower.includes('heels') || qLower.includes('stiletto') ||
+        qLower.includes('saree') || qLower.includes('sari') || qLower.includes('lehenga') ||
+        qLower.includes('gown') || qLower.includes('dress') || qLower.includes('blazer') ||
+        qLower.includes('suit') || qLower.includes('sherwani') || qLower.includes('bag') ||
+        qLower.includes('tote') || qLower.includes('handbag') || qLower.includes('jewelry') ||
+        qLower.includes('earring') || qLower.includes('necklace') || qLower.includes('shirt') ||
+        qLower.includes('trouser') || qLower.includes('pants') || qLower.includes('skirt') ||
+        qLower.includes('shoe') || qLower.includes('boots') || qLower.includes('loafer');
+
+      const isExplicitOutfitRequest =
+        qLower.includes('outfit') || qLower.includes('ensemble') || qLower.includes('complete look') || qLower.includes('full look') || qLower.includes('head to toe');
+
+      const shouldBuildOutfit = isExplicitOutfitRequest || (parsed.isOutfitRequest && !isSpecificItemQuery);
+
+      if (shouldBuildOutfit) {
         const outfit = await ProductService.buildOutfit(gender, undefined, maxPrice, message);
         return {
           content: parsed.content || `VELA has curated a complete VÉLORA ensemble for you.`,
@@ -254,17 +272,21 @@ Analyze client intent and return the structured JSON output.`;
       };
     }
 
-    // 7. Outfit Building Intent (e.g. "DESIGN A SAREE WORTH RUPPES 50 THOUSAND", "Build an outfit under ₹6,000")
-    if (
-      query.includes('outfit') ||
-      query.includes('design') ||
-      query.includes('build') ||
-      query.includes('ensemble') ||
-      query.includes('complete look') ||
-      query.includes('combine') ||
-      query.includes('style me') ||
-      query.includes('worth')
-    ) {
+    // 7. Explicit Outfit / Ensemble Intent
+    const isSpecificItemQuery =
+      query.includes('heel') || query.includes('heels') || query.includes('stiletto') ||
+      query.includes('saree') || query.includes('sari') || query.includes('lehenga') ||
+      query.includes('gown') || query.includes('dress') || query.includes('blazer') ||
+      query.includes('suit') || query.includes('sherwani') || query.includes('bag') ||
+      query.includes('tote') || query.includes('handbag') || query.includes('jewelry') ||
+      query.includes('earring') || query.includes('necklace') || query.includes('shirt') ||
+      query.includes('trouser') || query.includes('pants') || query.includes('skirt') ||
+      query.includes('shoe') || query.includes('boots') || query.includes('loafer');
+
+    const isExplicitOutfitRequest =
+      query.includes('outfit') || query.includes('ensemble') || query.includes('complete look') || query.includes('full look') || query.includes('head to toe');
+
+    if (isExplicitOutfitRequest || (!isSpecificItemQuery && (query.includes('design') || query.includes('build') || query.includes('style me') || query.includes('combine')))) {
       const outfit = await ProductService.buildOutfit(gender, occasion, maxPrice, query);
 
       let outfitDesc = `VELA has curated an `;
@@ -310,14 +332,23 @@ Analyze client intent and return the structured JSON output.`;
       };
     }
 
-    // 9. Multi-faceted Catalog Search
+    // 9. Specific Category / Multi-faceted Catalog Search
+    let targetCategory: string | undefined;
+    if (query.includes('dress') || query.includes('saree') || query.includes('sari') || query.includes('lehenga') || query.includes('gown') || query.includes('skirt')) targetCategory = 'Women';
+    else if (query.includes('blazer') || query.includes('suit') || query.includes('sherwani') || query.includes('tuxedo')) targetCategory = 'Men';
+    else if (query.includes('bag') || query.includes('tote') || query.includes('jewelry') || query.includes('earring') || query.includes('necklace') || query.includes('scarf') || query.includes('sunglasses')) targetCategory = 'Accessories';
+    else if (query.includes('shoe') || query.includes('heel') || query.includes('heels') || query.includes('stiletto') || query.includes('loafer') || query.includes('boot') || query.includes('boots')) targetCategory = 'Footwear';
+
+    const isHighBudget = typeof maxPrice === 'number' && maxPrice >= 30000;
+
     const { products: matches } = await ProductService.searchProducts({
-      category: query.includes('dress') ? 'Women' : query.includes('blazer') ? 'Men' : query.includes('bag') || query.includes('jewelry') ? 'Accessories' : query.includes('shoe') || query.includes('heel') || query.includes('loafer') ? 'Footwear' : undefined,
+      category: targetCategory,
       gender,
       maxPrice,
       occasion,
       style,
       searchQuery: query,
+      sortBy: isHighBudget ? 'price-desc' : 'featured'
     });
 
     let finalSelection = matches.length > 0 ? matches.slice(0, 4) : [];
@@ -329,15 +360,23 @@ Analyze client intent and return the structured JSON output.`;
     const priceText = typeof maxPrice === 'number' ? ` within your **₹${maxPrice.toLocaleString('en-IN')}** budget` : '';
     const budgetFollowup = typeof maxPrice === 'number' ? maxPrice.toLocaleString('en-IN') : '8,000';
 
-    let intro = `VELA has selected these signature VÉLORA pieces for your consideration`;
+    let itemTypeLabel = 'signature VÉLORA creations';
+    if (query.includes('heel') || query.includes('heels') || query.includes('stiletto')) itemTypeLabel = 'handcrafted luxury heels & stilettos';
+    else if (query.includes('saree') || query.includes('sari')) itemTypeLabel = 'Haute Couture silk sarees';
+    else if (query.includes('lehenga')) itemTypeLabel = 'royal Banarasi silk lehengas';
+    else if (query.includes('dress') || query.includes('gown')) itemTypeLabel = 'silk evening gowns & dresses';
+    else if (query.includes('bag') || query.includes('tote')) itemTypeLabel = 'Tuscan leather handbags & totes';
+    else if (query.includes('blazer') || query.includes('suit')) itemTypeLabel = 'Italian linen & wool tailoring';
+
+    let intro = `VELA has selected our finest **${itemTypeLabel}** for your consideration`;
     if (occasion) intro += ` designed for your **${occasion}**`;
     intro += `${priceText}.`;
 
     return {
-      content: `${intro} Each garment embodies master craftsmanship, pure silk/cashmere weaves, and timeless elegance.`,
+      content: `${intro} Each creation embodies master Italian & Indian artisan craftsmanship, pure Mulberry silk, and timeless luxury.`,
       suggestedFollowups: [
         `Show options under ₹${budgetFollowup}`,
-        `Would these work for an evening gala?`,
+        `What accessories pair with these?`,
         `How do I choose the correct size?`
       ],
       recommendedProducts: finalSelection,
