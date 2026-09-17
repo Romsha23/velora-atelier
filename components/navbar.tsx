@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { ShoppingBag, Heart, Search, Menu, X, Sparkles, User as UserIcon } from 'lucide-react';
-import { SignedIn, SignedOut, UserButton } from '@clerk/nextjs';
+import { useUser, UserButton } from '@clerk/nextjs';
 import { useCart } from '@/lib/cart-context';
 import { useWishlist } from '@/lib/wishlist-context';
 import { useAIStylist } from '@/lib/ai-stylist-context';
@@ -18,6 +18,7 @@ export default function Navbar() {
   const { setIsCartOpen, itemCount } = useCart();
   const { wishlistCount } = useWishlist();
   const { openAI } = useAIStylist();
+  const { isSignedIn, isLoaded } = useUser();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -141,9 +142,9 @@ export default function Navbar() {
               )}
             </button>
 
-            {/* Authentication States via Clerk */}
-            <div className="flex items-center pl-1 border-l border-[#22222E] ml-1">
-              <SignedIn>
+            {/* Authentication States via Clerk Hook */}
+            <div className="flex items-center pl-1 border-l border-[#22222E] ml-1 min-w-[70px]">
+              {isLoaded && isSignedIn ? (
                 <div className="flex items-center space-x-3">
                   <Link
                     href="/account"
@@ -152,7 +153,6 @@ export default function Navbar() {
                     VIP Salon
                   </Link>
                   <UserButton
-                    afterSignOutUrl="/"
                     appearance={{
                       elements: {
                         avatarBox: 'w-8 h-8 border border-[#C5A059]',
@@ -160,9 +160,7 @@ export default function Navbar() {
                     }}
                   />
                 </div>
-              </SignedIn>
-
-              <SignedOut>
+              ) : isLoaded ? (
                 <Link
                   href="/sign-in"
                   className="bg-[#C5A059]/10 hover:bg-[#C5A059] text-[#C5A059] hover:text-black border border-[#C5A059]/50 px-3 py-1.5 rounded-lg text-[11px] font-bold uppercase tracking-wider flex items-center space-x-1.5 transition-all shadow"
@@ -170,7 +168,9 @@ export default function Navbar() {
                   <UserIcon size={13} />
                   <span>VIP Sign In</span>
                 </Link>
-              </SignedOut>
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-[#181824] animate-pulse" />
+              )}
             </div>
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function Navbar() {
 
               <hr className="border-[#22222A]" />
 
-              <SignedIn>
+              {isLoaded && isSignedIn ? (
                 <Link
                   href="/account"
                   onClick={() => setMobileMenuOpen(false)}
@@ -200,9 +200,7 @@ export default function Navbar() {
                 >
                   My VIP Account & Orders
                 </Link>
-              </SignedIn>
-
-              <SignedOut>
+              ) : (
                 <Link
                   href="/sign-in"
                   onClick={() => setMobileMenuOpen(false)}
@@ -211,7 +209,7 @@ export default function Navbar() {
                   <UserIcon size={16} />
                   <span>VIP Client Login / Register</span>
                 </Link>
-              </SignedOut>
+              )}
 
               <button
                 onClick={() => {

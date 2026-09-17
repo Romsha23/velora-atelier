@@ -90,19 +90,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider
-      publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}
-      appearance={{
-        layout: {
-          socialButtonsVariant: 'iconButton',
-        },
-        variables: {
-          colorPrimary: '#C5A059',
-          colorBackground: '#12121A',
-          colorText: '#FFFFFF',
-        },
-      }}
-    >
+    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
       <html lang="en" className={`${serifFont.variable} ${sansFont.variable}`}>
         <head>
           <title>VÉLORA | Curated for your style. (AI Personal Stylist: VELA)</title>

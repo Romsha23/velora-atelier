@@ -65,7 +65,7 @@ export default function AccountPage() {
 
           {isSignedIn && (
             <div className="pl-2">
-              <UserButton afterSignOutUrl="/" />
+              <UserButton />
             </div>
           )}
         </div>
