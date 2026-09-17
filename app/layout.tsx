@@ -89,8 +89,12 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  const publishableKey =
+    process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY ||
+    'pk_test_ZWFzeS10YXBpci03MDM5LmNsZXJrLmFjY291bnRzLmRldiQ';
+
   return (
-    <ClerkProvider publishableKey={process.env.NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY}>
+    <ClerkProvider publishableKey={publishableKey}>
       <html lang="en" className={`${serifFont.variable} ${sansFont.variable}`}>
         <head>
           <title>VÉLORA | Curated for your style. (AI Personal Stylist: VELA)</title>
