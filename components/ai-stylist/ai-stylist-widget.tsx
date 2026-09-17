@@ -76,6 +76,8 @@ export default function AIStylistWidget({ isOpen, onClose, initialPrompt }: AISt
         recommendedProducts: data.recommendedProducts,
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         suggestedFollowups: data.suggestedFollowups,
+        toolActionExecuted: data.toolActionExecuted,
+        outfitComposition: data.outfitComposition,
       };
 
       setMessages((prev) => [...prev, aiMsg]);

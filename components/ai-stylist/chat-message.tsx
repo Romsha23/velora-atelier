@@ -3,7 +3,7 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ShoppingBag, ArrowUpRight, Sparkles, Check } from 'lucide-react';
+import { ShoppingBag, ArrowUpRight, Sparkles } from 'lucide-react';
 import { AIMessage, Product } from '@/types';
 import { useCart } from '@/lib/cart-context';
 
@@ -15,6 +15,7 @@ interface ChatMessageProps {
 export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
   const { addToCart } = useCart();
   const isAssistant = message.role === 'assistant';
+  const isOutfit = message.toolActionExecuted === 'buildOutfit' || Boolean(message.outfitComposition);
 
   const handleQuickAdd = (product: Product) => {
     const defaultSize = product.sizes[0] || 'M';
@@ -85,7 +86,7 @@ export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
               <div className="flex items-center space-x-1 text-[10px] uppercase tracking-widest text-[#C5A059] font-medium">
                 <Sparkles size={11} />
                 <span>
-                  {message.recommendedProducts.length > 2 ? 'Complete Outfit Composition' : 'Recommended VÉLORA Items'}
+                  {isOutfit ? 'Complete Outfit Composition' : 'Recommended VÉLORA Items'}
                 </span>
               </div>
               {message.recommendedProducts.length > 1 && (
@@ -94,7 +95,7 @@ export default function ChatMessage({ message, isTyping }: ChatMessageProps) {
                   className="bg-[#C5A059] hover:bg-[#D4AF37] text-black text-[10px] uppercase font-bold px-2.5 py-1 rounded flex items-center space-x-1 transition-colors"
                 >
                   <ShoppingBag size={11} />
-                  <span>Add Entire Outfit</span>
+                  <span>{isOutfit ? 'Add Entire Outfit' : 'Add All to Cart'}</span>
                 </button>
               )}
             </div>

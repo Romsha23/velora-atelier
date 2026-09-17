@@ -70,6 +70,10 @@ export interface AIMessage {
   timestamp: string;
   suggestedFollowups?: string[];
   toolActionExecuted?: string;
+  outfitComposition?: {
+    items: Product[];
+    totalCost: number;
+  };
 }
 
 export interface FilterState {
